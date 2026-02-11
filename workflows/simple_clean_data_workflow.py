@@ -67,10 +67,10 @@ def reasoning_node(state: DataState) -> DataState:
     """Use LLM to decide whether to clean missing values or remove outliers."""
     prompt = (
         "You are a data science assistant. "
-        "Given this dataset summary, decide which single action is most appropriate: "
+        "Given this dataset summary, decide which action is most appropriate: "
         "'clean_missing', 'remove_outliers', or 'both'.\n\n"
         f"{state['summary']}\n\n"
-        "Respond only with one of: clean_missing, remove_outliers, both."
+        "Both means performing clean_missing and remove_outliers using IQR method on the dataset. When in doubt, always include the removal of outliers to be safe. Respond only with one of: clean_missing, remove_outliers, both."
     )
     decision = llm.invoke(prompt).content.strip().lower()
     if decision not in ["clean_missing", "remove_outliers", "both"]:
