@@ -72,7 +72,8 @@ def reasoning_node(state: DataState) -> DataState:
         f"{state['summary']}\n\n"
         "Respond only with one of: clean_missing, remove_outliers, both."
     )
-    decision = llm.invoke(prompt).content.strip().lower()
+    #decision = llm.invoke(prompt).content.strip().lower()
+    decision = "both"
     if decision not in ["clean_missing", "remove_outliers", "both"]:
         decision = "none"
     state["action"] = decision
@@ -115,6 +116,10 @@ def output_results(state: DataState):
     print(f"\n=== ACTION DECIDED: {state['action'].upper()} ===\n")
     print(state["summary"])
 
+def after_missing(state: DataState) -> str:
+    if state["action"] == "both":
+        return "remove_outliers"
+    return "describe_data"
 
 # ---------------------------
 # 4. Router Function
@@ -123,11 +128,13 @@ def output_results(state: DataState):
 def route_action(state: DataState) -> str:
     """Route based on LLM's chosen action."""
     mapping = {
-        "clean_missing": "handle_missing_values",
+        "handle_missing_values": "handle_missing_values",
         "remove_outliers": "remove_outliers",
         "none": "describe_data",
+        "both": "handle_missing_values"
     }
-    return mapping.get(state["action"], "describe_data")
+    #return mapping.get(state["action"], "describe_data")
+    return mapping.get("both")
 
 
 # ---------------------------
@@ -152,7 +159,16 @@ workflow.add_conditional_edges("reasoning_node", route_action, {
     "remove_outliers": "remove_outliers",
     "describe_data": "describe_data",
 })
-workflow.add_edge("handle_missing_values", "describe_data")
+
+#workflow.add_edge("handle_missing_values", "describe_data")
+workflow.add_conditional_edges(
+    "handle_missing_values",
+    after_missing,
+    {
+        "remove_outliers": "remove_outliers",
+        "describe_data": "describe_data",
+    }
+)
 workflow.add_edge("remove_outliers", "describe_data")
 workflow.add_edge("describe_data", "output_results")
 workflow.add_edge("output_results", END)
