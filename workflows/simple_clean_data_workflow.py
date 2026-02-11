@@ -72,8 +72,7 @@ def reasoning_node(state: DataState) -> DataState:
         f"{state['summary']}\n\n"
         "Respond only with one of: clean_missing, remove_outliers, both."
     )
-    #decision = llm.invoke(prompt).content.strip().lower()
-    decision = "both"
+    decision = llm.invoke(prompt).content.strip().lower()
     if decision not in ["clean_missing", "remove_outliers", "both"]:
         decision = "none"
     state["action"] = decision
@@ -133,8 +132,7 @@ def route_action(state: DataState) -> str:
         "none": "describe_data",
         "both": "handle_missing_values"
     }
-    #return mapping.get(state["action"], "describe_data")
-    return mapping.get("both")
+    return mapping.get(state["action"], "describe_data")
 
 
 # ---------------------------
